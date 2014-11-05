@@ -5,6 +5,10 @@
 #include <string.h>
 // END INCLUDE -----------------------
 
+// Constant -------------------------------
+#define BUFFER_SIZE 256
+
+//END Constant ----------------------------
 
 // Functions -------------------------------------------------------------------
 
@@ -132,14 +136,28 @@ return true;
 int main(int argc, char **argv) {
 int i=1;
 
-	while(i<argc){
-
+	while(i<argc){//Reading the input files
 		if(!initialize_file(argv[i])){
 			printf("Error: File %s can't be loaded.", argv[i]);
 			exit(-1);
 		}//End if
-
 	}//End While
+
+char ls_str[BUFFER_SIZE];
+int end_word,begin_word;
+
+	while(fgets(ls_str,BUFFER_SIZE,stdin)!=NULL){
+		end_word=0;
+		while(ls_str[end_word]!='\n'){
+			begin_word = end_word;
+			while(is_letter(ls_str[end_word])){
+				end_word++;
+			}
+
+			end_word++;
+		}
+
+	}
 
 	return EXIT_SUCCESS;
 }
