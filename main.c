@@ -4,43 +4,54 @@
 #include <stdio.h>
 #include <string.h>
 // END INCLUDE -----------------------
-
+// STRUCTS --------------------------------
+typedef struct Arq_invertido{
+	char* word;
+	unsigned short int* docs;
+	struct Arq_invertido* prox;
+}Arq_invertido;
+//----------------------------------------
 // Constant -------------------------------
 #define BUFFER_SIZE 256
 
 //END Constant ----------------------------
 
+// Var-------------------------------------
+Arq_invertido* No_arq;
+
+
+//------------------------------------------
 // Functions -------------------------------------------------------------------
 
 char lower(char a_c){
 	//-------------------------------------------------------------
-	//Retorno:
-	//			char : a letra minuscula
+	//Return:
+	//			char : a lower case
 	//
-	//Argumentos:
-	//			char a_c: letra que se deseja torna minuscula
+	//Arguments:
+	//			char a_c: letter in lower or upper case
 	//
-	//Descrição da função:
-	//			Tornar uma letra maiuscula em minuscula
+	//Description of functions:
+	//			Turn an letter uppercase in lowercase
 	//-------------------------------------------------------------
 
 	if(a_c>='A' && a_c<='Z')
-		return a_c+32;//Tabela ASCII
+		return a_c+32;//ASCII Table
 	else
 		return a_c;
 }//End lower
 
 bool is_letter(char a_c){
 	//-------------------------------------------------------------
-	//Retorno:
-	//			bool : true = é um char entre 'a' e 'z'(minusculo)
-	//					false = é algo que não é entre 'a' e 'z' (minusculo)
+	//Return:
+	//			bool : true = is an char between 'a' and 'z' (in lowercase)
+	//					false = is something that isn't between 'a' and 'z' (minusculo)
 	//
-	//Argumentos:
-	//			char a_c: letra que se deseja comparar
+	//Arguments:
+	//			char a_c: letter that you wants to compare
 	//
-	//Descrição da função:
-	//			verificar se o 'char c' é uma letra minuscula(a-z)
+	//Description of function:
+	//			Compare if the char 'a_c' is an letter lowercase
 	//-------------------------------------------------------------
 
 	if((a_c>='a' && a_c<='z')||(a_c>='A' && a_c<='Z'))
@@ -51,31 +62,31 @@ bool is_letter(char a_c){
 
 char* append(char* a_str, char a_c) {
 	//-------------------------------------------------------------
-	//Retorno:
-	//			char* : Retorna a string concatenada;
+	//Return:
+	//			char* : Returns the concatenated string;
 	//
-	//Argumentos:
-	//			char* a_str: Recebe a string como base;
-	//			char c: A letra que deseja-se concatenar
+	//Arguments:
+	//			char* a_str: Receives the string as base;
+	//			char c: The letter that you wants to concatenate
 	//
-	//Descrição da função:
-	//			Adiciona uma letra ao final da string, Ex.: cas + a = casa
+	//Description of function:
+	//			 Add a letter at the end of the string, Example.: cas + a = casa
 	//-------------------------------------------------------------
 
 	char * ls_new_str;
 	if(a_str=='\0')
 		a_str = NULL;
 
-	if(a_str==NULL){// Se for nulo, aloca um espaço de memoria pra armazenar a letra e o '\0'
+	if(a_str==NULL){// If it's null, allocate a memory space for store the letter and '\0'
 		a_str = (char*)malloc(2);
 		a_str[0] = a_c;
 		a_str[1] = '\0';
 	}
 	else{
 		int i;
-		ls_new_str = a_str;// salva em um ponteiro temporario
-		i = (strlen(ls_new_str))+2;//testar com realloc
-		a_str = (char*)malloc(i);//Aloca um novo espaço do tamanho da nova palavra
+		ls_new_str = a_str;// save in temporary pointer
+		i = (strlen(ls_new_str))+2;
+		a_str = (char*)malloc(i);//Alocate a new memory space
 		for(i=0; i< strlen(ls_new_str); i++)
 			a_str[i] = ls_new_str[i];
 		a_str[i] = a_c;
@@ -87,8 +98,93 @@ char* append(char* a_str, char a_c) {
 	return a_str;
 }//End append()
 
+bool Str_compare(char* word1,char* word2){
+	bool equal = true;
+	int i=0;
+	while(equal){
+		if(word1[i]!=word2[i]){
+			equal = false;
+			break;
+		}else{
+			if(word1[i]=='\0' || word2[i]=='\0')
+				break;
+		}
+	}
 
-bool initialize_file(char* file_name){
+	return equal;
+}
+
+bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file){
+
+	if(*No==NULL){
+		(*No) = (Arq_invertido*)malloc(sizeof(Arq_invertido));
+		(*No)->docs = (unsigned short int*) malloc (total_file*sizeof(unsigned short int));
+
+		(*No)->word = word;
+		(*No)->docs[0]=number_file;
+		(*No)->prox = NULL;
+	}else{
+		Arq_invertido* aux;
+		int cmp=0;
+		aux = (*No);
+		while(true){
+			if(aux->prox!=NULL){
+				cmp = strcmp(word,aux->word);
+				if(cmp<0){
+					Arq_invertido* novo_no;
+					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
+					novo_no->docs = (unsigned short int*) malloc (total_file*sizeof(unsigned short int));
+					novo_no->word = word;
+					novo_no->docs[0]=number_file;
+
+					novo_no->prox = aux;
+					(*No) = novo_no;
+					break;
+				}else if(cmp==0){
+					int i=0;
+					while(aux->docs[i]!='\0')
+						i++;
+					if(aux->docs[i-1]!=aux->docs[i])
+						aux->docs[i]=number_file;
+					break;
+				}
+			}else{
+				cmp = strcmp(word,aux->word);
+				if(cmp<0){
+					Arq_invertido* novo_no;
+					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
+					novo_no->docs = (unsigned short int*) malloc (total_file*sizeof(unsigned short int));
+					novo_no->word = word;
+					novo_no->docs[0]=number_file;
+
+					novo_no->prox = aux;
+					(*No) = novo_no;
+					break;
+				}else if(cmp==0){
+					int i=0;
+					while(aux->docs[i]!='\0')
+						i++;
+					if(aux->docs[i-1]!=aux->docs[i])
+						aux->docs[i]=number_file;
+					break;
+				}else{
+					Arq_invertido* novo_no;
+					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
+					novo_no->docs = (unsigned short int*) malloc (total_file*sizeof(unsigned short int));
+					novo_no->word = word;
+					novo_no->docs[0]=number_file;
+					novo_no->prox = NULL;
+					aux->prox = novo_no;
+					break;
+				}
+			}
+			aux = aux->prox;
+		}
+	}
+	return true;
+}
+
+bool initialize_file(char* file_name, int number_file, int total_file){
 	FILE *lf_file;
 	lf_file = fopen(file_name,"r");
 
@@ -115,9 +211,11 @@ bool initialize_file(char* file_name){
 			if(ls_str!=NULL){
 				if(!is_letter(lc_c)){
 					//TODO ver o que tenho que fazer com a palavra (ls_str)
+					insere_word(&No_arq,ls_str, number_file,total_file);
 				}else{//Necessário devido ao final de texto(código exclui a ultima letra por causa do while)
 					lc_c = lower(lc_c);
 					ls_str = append(ls_str,lc_c);
+					insere_word(&No_arq,ls_str,number_file,total_file);
 					//TODO ver o que tenho que fazer com a palavra (ls_str)
 				}//End else
 			}//End if
@@ -135,14 +233,15 @@ return true;
 
 int main(int argc, char **argv) {
 int i=1;
-
+No_arq = NULL;
 	while(i<argc){//Reading the input files
-		if(!initialize_file(argv[i])){
+		if(!initialize_file(argv[i],i,argc-1)){
 			printf("Error: File %s can't be loaded.", argv[i]);
 			exit(-1);
 		}//End if
+		i++;
 	}//End While
-
+/*
 char ls_str[BUFFER_SIZE];
 int end_word,begin_word;
 
@@ -157,7 +256,7 @@ int end_word,begin_word;
 			end_word++;
 		}
 
-	}
+	}*/
 
 	return EXIT_SUCCESS;
 }
