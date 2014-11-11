@@ -7,9 +7,14 @@
 // STRUCTS --------------------------------
 typedef struct Arq_invertido{
 	char* word;
-	unsigned short int* docs; //TODO Change to boollean
+	bool* docs;
 	struct Arq_invertido* prox;
 }Arq_invertido;
+
+typedef struct String{
+	char* string;
+	short int length;
+}String;
 //----------------------------------------
 // Constant -------------------------------
 #define BUFFER_SIZE 256
@@ -98,30 +103,15 @@ char* append(char* a_str, char a_c) {
 	return a_str;
 }//End append()
 
-bool Str_compare(char* word1,char* word2){
-	bool equal = true;
-	int i=0;
-	while(equal){
-		if(word1[i]!=word2[i]){
-			equal = false;
-			break;
-		}else{
-			if(word1[i]=='\0' || word2[i]=='\0')
-				break;
-		}
-	}
-
-	return equal;
-}
 
 bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file){
 
 	if(*No==NULL){
 		(*No) = (Arq_invertido*)malloc(sizeof(Arq_invertido));
-		(*No)->docs = (unsigned short int*) malloc (total_file*sizeof(unsigned short int));
+		(*No)->docs = (bool*) calloc (total_file,sizeof(bool));
 
 		(*No)->word = word;
-		(*No)->docs[0]=number_file;
+		(*No)->docs[number_file]=true;
 		(*No)->prox = NULL;
 	}else{
 		Arq_invertido* aux;
@@ -133,19 +123,15 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 				if(cmp<0){
 					Arq_invertido* novo_no;
 					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
-					novo_no->docs = (unsigned short int*) malloc (total_file*sizeof(unsigned short int));
+					novo_no->docs = (bool*) calloc (total_file,sizeof(bool));
 					novo_no->word = word;
-					novo_no->docs[0]=number_file;
+					novo_no->docs[number_file]=true;
 
 					novo_no->prox = aux;
 					(*No) = novo_no;
 					break;
 				}else if(cmp==0){
-					int i=0;
-					while(aux->docs[i]!='\0')
-						i++;
-					if(aux->docs[i-1]!=aux->docs[i])
-						aux->docs[i]=number_file;
+					aux->docs[number_file]=true;
 					break;
 				}
 			}else{
@@ -153,26 +139,22 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 				if(cmp<0){
 					Arq_invertido* novo_no;
 					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
-					novo_no->docs = (unsigned short int*) malloc (total_file*sizeof(unsigned short int));
+					novo_no->docs = (bool*) calloc (total_file,sizeof(bool));
 					novo_no->word = word;
-					novo_no->docs[0]=number_file;
+					novo_no->docs[number_file]=true;
 
 					novo_no->prox = aux;
 					(*No) = novo_no;
 					break;
 				}else if(cmp==0){
-					int i=0;
-					while(aux->docs[i]!='\0')
-						i++;
-					if(aux->docs[i-1]!=aux->docs[i])
-						aux->docs[i]=number_file;
+					aux->docs[number_file]=true;
 					break;
 				}else{
 					Arq_invertido* novo_no;
 					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
-					novo_no->docs = (unsigned short int*) malloc (total_file*sizeof(unsigned short int));
+					novo_no->docs = (bool*) calloc (total_file,sizeof(bool));
 					novo_no->word = word;
-					novo_no->docs[0]=number_file;
+					novo_no->docs[number_file]=true;
 					novo_no->prox = NULL;
 					aux->prox = novo_no;
 					break;
@@ -211,11 +193,11 @@ bool initialize_file(char* file_name, int number_file, int total_file){
 			if(ls_str!=NULL){
 				if(!is_letter(lc_c)){
 					//TODO ver o que tenho que fazer com a palavra (ls_str)
-					insere_word(&No_arq,ls_str, number_file,total_file);
+					insere_word(&No_arq,ls_str, number_file-1,total_file);
 				}else{//Necessário devido ao final de texto(código exclui a ultima letra por causa do while)
 					lc_c = lower(lc_c);
 					ls_str = append(ls_str,lc_c);
-					insere_word(&No_arq,ls_str,number_file,total_file);
+					insere_word(&No_arq,ls_str,number_file-1,total_file);
 					//TODO ver o que tenho que fazer com a palavra (ls_str)
 				}//End else
 			}//End if
@@ -229,6 +211,31 @@ bool initialize_file(char* file_name, int number_file, int total_file){
 return true;
 }//End initialize_file()
 
+bool* search_list(Arq_invertido* list,char* word){
+	short int cmp;
+	while(true){
+		if(list==NULL)
+			break;
+		cmp = strcmp(word,list->word);
+
+		if(cmp==0)
+			return list->docs;
+		else if(cmp<0)
+			break;
+
+		list = list->prox;
+	}
+	return NULL;
+}//END search_list()
+/*
+bool* ocurrence_word(char* a_str,int number_word,int argc){
+	bool* result = (bool*) calloc(argc,sizeof(bool));
+	while(number_word!=0){
+
+	}
+	return true;
+}*/
+
 // END Functions --------------------------------------------------------------
 
 int main(int argc, char **argv) {
@@ -241,22 +248,45 @@ No_arq = NULL;
 		}//End if
 		i++;
 	}//End While
-/*
+
 char ls_str[BUFFER_SIZE];
-int end_word,begin_word;
+short int length;
+int end_text,begin_word;
+bool* ocorrencia,aux;
+String* word;
 
+ocorrencia = (bool*)calloc((argc-1),sizeof(bool));
+word = (String*)malloc(sizeof(String));
 	while(fgets(ls_str,BUFFER_SIZE,stdin)!=NULL){
-		end_word=0;
-		while(ls_str[end_word]!='\n'){
-			begin_word = end_word;
-			while(is_letter(ls_str[end_word])){
-				end_word++;
+		end_text=0;
+		while(ls_str[end_text]!='\n'){
+			begin_word = end_text;
+			while(is_letter(ls_str[end_text])){
+				end_text++;
 			}
+			length = end_text-begin_word;
+			word->string = (char*)calloc((length),sizeof(char));
+			memmove(word->string,ls_str+begin_word,(length));
+			word->length = length;
 
-			end_word++;
+			aux =search_list(No_arq,word->string);
+			if(aux!=NULL)
+				for(i=0;i<argc-1;i++)
+					ocorrencia[i] = aux+i || ocorrencia+i;
+
+			if(ls_str[end_text]=='\n')
+				break;
+
+			free(word->string);
+			free(word);
+			end_text++;
 		}
 
-	}*/
+		for(i=0;i<argc-1;i++)
+			if(ocorrencia[i])
+				printf("%s ",argv[i+1]);
+
+	}
 
 	return EXIT_SUCCESS;
 }
