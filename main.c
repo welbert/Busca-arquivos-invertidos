@@ -5,9 +5,17 @@
 #include <string.h>
 // END INCLUDE -----------------------
 // STRUCTS --------------------------------
+typedef unsigned short int ui;
+
+typedef struct Ocorrencia{
+	bool docs;
+	ui* n_ocorrencia;
+}Ocorrencia;
+
 typedef struct Arq_invertido{
 	char* word;
 	bool* docs;
+	//TODO add Ocorrencia* ocorrencia and remove bool* docs (Make adaptations)
 	struct Arq_invertido* prox;
 }Arq_invertido;
 
@@ -252,15 +260,20 @@ short int length;
 int end_text,begin_word;
 bool* ocorrencia;
 bool* aux=NULL;
+bool flag;
 String* word;
 
-ocorrencia = (bool*)calloc((argc-1),sizeof(bool));
 word = (String*)malloc(sizeof(String));
 	while(fgets(ls_str,BUFFER_SIZE,stdin)!=NULL){
+		ocorrencia = (bool*)calloc((argc-1),sizeof(bool));
 		end_text=0;
+		flag=true;
+
 		while(ls_str[end_text]!='\n'){
+
 			begin_word = end_text;
 			while(is_letter(ls_str[end_text])){
+				ls_str[end_text] = lower(ls_str[end_text]);
 				end_text++;
 			}
 			length = end_text-begin_word;
@@ -269,24 +282,41 @@ word = (String*)malloc(sizeof(String));
 			word->length = length;
 
 			aux = search_list(No_arq,word->string);
-			if(aux!=NULL)
+			if(aux!=NULL){
+				if(!flag)
+					for(i=0;i<argc-1;i++)
+						ocorrencia[i] = aux[i] && ocorrencia[i];
+				else{
+					for(i=0;i<argc-1;i++)
+						ocorrencia[i] = aux[i];
+					flag = false;
+				}
+
+			}else{
 				for(i=0;i<argc-1;i++)
-					ocorrencia[i] = aux[i] || ocorrencia[i];
+					ocorrencia[i] = false;
+				break;
+			}
 
 
 			if(ls_str[end_text]=='\n')
 				break;
 
 			free(word->string);
-			free(word);
 			end_text++;
 		}
-
+		flag=false;
 		for(i=0;i<argc-1;i++)
-			if(ocorrencia[i])
+			if(ocorrencia[i]){
+				flag = true;
 				printf("%s ",argv[i+1]);
+			}
+		if(!flag)
+			printf("FRASE NAO ENCONTRADA!");
 
+		printf("\n");
 	}
+	free(word);
 
 	return EXIT_SUCCESS;
 }
