@@ -97,7 +97,7 @@ char* append(char* a_str, char a_c) {
 		a_str[i] = a_c;
 		i++;
 		a_str[i] = '\0';
-		//ls_new_str = NULL; //TODO ver se no debug se ele limpa a memória certa
+		//ls_new_str = NULL;
 		free(ls_new_str);
 	}
 	return a_str;
@@ -192,13 +192,11 @@ bool initialize_file(char* file_name, int number_file, int total_file){
 
 			if(ls_str!=NULL){
 				if(!is_letter(lc_c)){
-					//TODO ver o que tenho que fazer com a palavra (ls_str)
 					insere_word(&No_arq,ls_str, number_file-1,total_file);
 				}else{//Necessário devido ao final de texto(código exclui a ultima letra por causa do while)
 					lc_c = lower(lc_c);
 					ls_str = append(ls_str,lc_c);
 					insere_word(&No_arq,ls_str,number_file-1,total_file);
-					//TODO ver o que tenho que fazer com a palavra (ls_str)
 				}//End else
 			}//End if
 
@@ -252,7 +250,8 @@ No_arq = NULL;
 char ls_str[BUFFER_SIZE];
 short int length;
 int end_text,begin_word;
-bool* ocorrencia,aux;
+bool* ocorrencia;
+bool* aux=NULL;
 String* word;
 
 ocorrencia = (bool*)calloc((argc-1),sizeof(bool));
@@ -269,10 +268,10 @@ word = (String*)malloc(sizeof(String));
 			memmove(word->string,ls_str+begin_word,(length));
 			word->length = length;
 
-			aux =search_list(No_arq,word->string);
+			aux = search_list(No_arq,word->string);
 			if(aux!=NULL)
-				for(i=0;i<argc-1;i++)
-					ocorrencia[i] = aux+i || ocorrencia+i;
+					ocorrencia[i] = aux[i] || ocorrencia[i];
+
 
 			if(ls_str[end_text]=='\n')
 				break;
