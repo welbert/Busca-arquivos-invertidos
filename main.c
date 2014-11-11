@@ -7,7 +7,7 @@
 // STRUCTS --------------------------------
 typedef struct Arq_invertido{
 	char* word;
-	unsigned short int* docs;
+	unsigned short int* docs; //TODO Change to boollean
 	struct Arq_invertido* prox;
 }Arq_invertido;
 //----------------------------------------
