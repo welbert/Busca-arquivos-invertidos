@@ -270,6 +270,7 @@ word = (String*)malloc(sizeof(String));
 
 			aux = search_list(No_arq,word->string);
 			if(aux!=NULL)
+				for(i=0;i<argc-1;i++)
 					ocorrencia[i] = aux[i] || ocorrencia[i];
 
 
