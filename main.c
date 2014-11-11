@@ -17,6 +17,7 @@ typedef struct Arq_invertido{
 	bool* docs;
 	//TODO add Ocorrencia* ocorrencia and remove bool* docs (Make adaptations)
 	struct Arq_invertido* prox;
+	struct Arq_invertido* prev;
 }Arq_invertido;
 
 typedef struct String{
@@ -121,22 +122,26 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 		(*No)->word = word;
 		(*No)->docs[number_file]=true;
 		(*No)->prox = NULL;
+		(*No)->prev = NULL;
 	}else{
 		Arq_invertido* aux;
+		Arq_invertido* novo_no=NULL;
 		int cmp=0;
 		aux = (*No);
 		while(true){
 			if(aux->prox!=NULL){
 				cmp = strcmp(word,aux->word);
 				if(cmp<0){
-					Arq_invertido* novo_no;
 					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
 					novo_no->docs = (bool*) calloc (total_file,sizeof(bool));
 					novo_no->word = word;
 					novo_no->docs[number_file]=true;
 
 					novo_no->prox = aux;
-					(*No) = novo_no;
+					novo_no->prev = aux->prev;
+					aux->prev = novo_no;
+					if(novo_no->prev == NULL)
+						(*No) = novo_no;
 					break;
 				}else if(cmp==0){
 					aux->docs[number_file]=true;
@@ -145,25 +150,28 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 			}else{
 				cmp = strcmp(word,aux->word);
 				if(cmp<0){
-					Arq_invertido* novo_no;
 					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
 					novo_no->docs = (bool*) calloc (total_file,sizeof(bool));
 					novo_no->word = word;
 					novo_no->docs[number_file]=true;
 
 					novo_no->prox = aux;
-					(*No) = novo_no;
+					novo_no->prev = aux->prev;
+					aux->prev = novo_no;
+					if(novo_no->prev == NULL)
+						(*No) = novo_no;
 					break;
 				}else if(cmp==0){
 					aux->docs[number_file]=true;
 					break;
 				}else{
-					Arq_invertido* novo_no;
 					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
 					novo_no->docs = (bool*) calloc (total_file,sizeof(bool));
 					novo_no->word = word;
 					novo_no->docs[number_file]=true;
 					novo_no->prox = NULL;
+					novo_no->prev = aux;
+
 					aux->prox = novo_no;
 					break;
 				}
