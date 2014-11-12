@@ -22,7 +22,7 @@ typedef struct Arq_invertido{
 
 typedef struct String{
 	char* string;
-	short int length;
+	ui length;
 }String;
 //----------------------------------------
 // Constant -------------------------------
@@ -140,8 +140,11 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 					novo_no->prox = aux;
 					novo_no->prev = aux->prev;
 					aux->prev = novo_no;
-					if(novo_no->prev == NULL)
+					if(novo_no->prev != NULL)
+						novo_no->prev->prox = novo_no;
+					else
 						(*No) = novo_no;
+
 					break;
 				}else if(cmp==0){
 					aux->docs[number_file]=true;
@@ -158,7 +161,9 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 					novo_no->prox = aux;
 					novo_no->prev = aux->prev;
 					aux->prev = novo_no;
-					if(novo_no->prev == NULL)
+					if(novo_no->prev != NULL)
+						novo_no->prev->prox = novo_no;
+					else
 						(*No) = novo_no;
 					break;
 				}else if(cmp==0){
@@ -226,7 +231,7 @@ return true;
 }//End initialize_file()
 
 bool* search_list(Arq_invertido* list,char* word){
-	short int cmp;
+	ui cmp;
 	while(true){
 		if(list==NULL)
 			break;
@@ -264,7 +269,7 @@ No_arq = NULL;
 	}//End While
 
 char ls_str[BUFFER_SIZE];
-short int length;
+ui length;
 int end_text,begin_word;
 bool* ocorrencia;
 bool* aux=NULL;
