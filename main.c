@@ -9,6 +9,7 @@ typedef unsigned short int ui;
 
 typedef struct Ocorrencia{
 	bool docs;
+	ui length_ocorrencia;
 	ui* n_ocorrencia;
 }Ocorrencia;
 
@@ -27,15 +28,16 @@ typedef struct String{
 //----------------------------------------
 // Constant -------------------------------
 #define BUFFER_SIZE 256
-
+#define MAX_HASH 50
 //END Constant ----------------------------
 
 // Var-------------------------------------
-Arq_invertido* No_arq;
-
+//Arq_invertido* No_arq;
+Arq_invertido* Hash[MAX_HASH];//TODO setar tudo como nulo
 
 //------------------------------------------
 // Functions -------------------------------------------------------------------
+
 
 char lower(char a_c){
 	//-------------------------------------------------------------
@@ -124,7 +126,7 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 		(*No)->prox = NULL;
 		(*No)->prev = NULL;
 	}else{
-		Arq_invertido* aux;
+		Arq_invertido* aux=NULL;
 		Arq_invertido* novo_no=NULL;
 		int cmp=0;
 		aux = (*No);
@@ -187,6 +189,21 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 	return true;
 }
 
+ui hash_str(char* str){
+	int h = str[0];
+	h = h%MAX_HASH;
+	int i;
+	for(i=1;str[i]!='\0';i++)
+		h=(h*256+str[i])%MAX_HASH;
+
+	return h;
+}
+
+bool insere_hash(char* word, int number_file, int total_file){
+	return insere_word(&Hash[hash_str(word)],word,number_file,total_file);
+}
+
+
 bool initialize_file(char* file_name, int number_file, int total_file){
 	FILE *lf_file;
 	lf_file = fopen(file_name,"r");
@@ -213,11 +230,11 @@ bool initialize_file(char* file_name, int number_file, int total_file){
 
 			if(ls_str!=NULL){
 				if(!is_letter(lc_c)){
-					insere_word(&No_arq,ls_str, number_file-1,total_file);
+					insere_hash(ls_str, number_file-1,total_file);
 				}else{//Necessário devido ao final de texto(código exclui a ultima letra por causa do while)
 					lc_c = lower(lc_c);
 					ls_str = append(ls_str,lc_c);
-					insere_word(&No_arq,ls_str,number_file-1,total_file);
+					insere_hash(ls_str,number_file-1,total_file);
 				}//End else
 			}//End if
 
@@ -259,7 +276,8 @@ bool* ocurrence_word(char* a_str,int number_word,int argc){
 
 int main(int argc, char **argv) {
 int i=1;
-No_arq = NULL;
+//No_arq = NULL;
+memset(Hash,0x0,MAX_HASH);
 	while(i<argc){//Reading the input files
 		if(!initialize_file(argv[i],i,argc-1)){
 			printf("Error: File %s can't be loaded.", argv[i]);
@@ -294,7 +312,7 @@ word = (String*)malloc(sizeof(String));
 			memmove(word->string,ls_str+begin_word,(length));
 			word->length = length;
 
-			aux = search_list(No_arq,word->string);
+			aux = search_list(Hash[hash_str(word->string)],word->string);
 			if(aux!=NULL){
 				if(!flag)
 					for(i=0;i<argc-1;i++)
