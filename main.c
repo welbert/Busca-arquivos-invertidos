@@ -21,9 +21,7 @@ typedef struct Docs{
 
 typedef struct Arq_invertido{
 	char* word;
-	//bool* docs;
 	Docs* ocorrencia;
-	//TODO add Ocorrencia* ocorrencia and remove bool* docs (Make adaptations)
 	struct Arq_invertido* prox;
 	struct Arq_invertido* prev;
 }Arq_invertido;
@@ -318,15 +316,6 @@ Docs* search_list(Arq_invertido* list,char* word){
 	}
 	return NULL;
 }//END search_list()
-/*
-bool* ocurrence_word(char* a_str,int number_word,int argc){
-	bool* result = (bool*) calloc(argc,sizeof(bool));
-	while(number_word!=0){
-
-	}
-	return true;
-}*/
-
 
 Docs* compare_No(Docs* No1 , Docs* No2){// volta a interseção dos Docs*
 	Docs* result = NULL;
@@ -365,7 +354,7 @@ Docs* compare_No(Docs* No1 , Docs* No2){// volta a interseção dos Docs*
 
 int main(int argc, char **argv) {
 int i=1;
-//No_arq = NULL;
+
 memset(Hash,0x0,MAX_HASH);
 	while(i<argc){//Reading the input files
 		if(!initialize_file(argv[i],i,argc-1)){
@@ -385,7 +374,7 @@ String* word;
 
 word = (String*)malloc(sizeof(String));
 	while(fgets(ls_str,BUFFER_SIZE,stdin)!=NULL){
-		ocorrencia = NULL;//(bool*)calloc((argc-1),sizeof(bool));
+		ocorrencia = NULL;
 		aux = NULL;
 		end_text=0;
 		flag=false;
@@ -424,24 +413,18 @@ word = (String*)malloc(sizeof(String));
 			free(word->string);
 			end_text++;
 		}
-		/*flag=false;
-		for(i=0;i<argc-1;i++)
-			if(ocorrencia[i]){
-				flag = true;
-				printf("%s ",argv[i+1]);
-			}
-		if(!flag)
-			printf("FRASE NAO ENCONTRADA!");
-		*/
+
 		if(ocorrencia!=NULL){
 			while(ocorrencia!=NULL){
 				printf("%s ",argv[ocorrencia->file + 1]);
 				ocorrencia = ocorrencia->prox;
 			}
+
 		}else
 			printf("FRASE NAO ENCONTRADA!");
 
 		printf("\n");
+
 	}
 	free(word);
 
