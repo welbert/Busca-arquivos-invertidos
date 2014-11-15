@@ -8,14 +8,21 @@
 typedef unsigned short int ui;
 
 typedef struct Ocorrencia{
-	bool docs;
-	ui length_ocorrencia;
-	ui* n_ocorrencia;
+	ui indice;
+	struct Ocorrencia* prox;
 }Ocorrencia;
+
+typedef struct Docs{
+	ui file;
+	struct Docs* prox;
+	Ocorrencia* n_ocorrencia;
+	Ocorrencia* last_ocorrencia;
+}Docs;
 
 typedef struct Arq_invertido{
 	char* word;
-	bool* docs;
+	//bool* docs;
+	Docs* ocorrencia;
 	//TODO add Ocorrencia* ocorrencia and remove bool* docs (Make adaptations)
 	struct Arq_invertido* prox;
 	struct Arq_invertido* prev;
@@ -33,7 +40,7 @@ typedef struct String{
 
 // Var-------------------------------------
 //Arq_invertido* No_arq;
-Arq_invertido* Hash[MAX_HASH];//TODO setar tudo como nulo
+Arq_invertido* Hash[MAX_HASH];
 
 //------------------------------------------
 // Functions -------------------------------------------------------------------
@@ -114,15 +121,63 @@ char* append(char* a_str, char a_c) {
 	return a_str;
 }//End append()
 
+void insere_Ocorrencia(Docs** No,ui file,ui indice){
+	Ocorrencia* aux;
+	Docs* aux_docs;
 
-bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file){
+	if(*No==NULL){
+		(*No) = (Docs*) malloc(sizeof(Docs));
+		(*No)->file = file;
+		(*No)->prox = NULL;
+
+
+		aux = (Ocorrencia*) malloc(sizeof(Ocorrencia));
+		aux->indice = indice;
+		aux->prox = NULL;
+
+		(*No)->last_ocorrencia = aux;
+		(*No)->n_ocorrencia = aux;
+	}else{
+		aux_docs = *No;
+		bool flag = true;
+		while(flag){
+			if(aux_docs->file == file){
+				aux = (Ocorrencia*) malloc(sizeof(Ocorrencia));
+				aux->indice = indice;
+				aux->prox = NULL;
+
+				aux_docs->last_ocorrencia->prox = aux;
+				aux_docs->last_ocorrencia = aux;
+				break;
+			}
+			if(aux_docs->prox!=NULL)
+				aux_docs = aux_docs->prox;
+			else
+				flag=false;
+		}
+		if(!flag){
+			aux_docs->prox = (Docs*) malloc(sizeof(Docs));
+			aux_docs->prox->file = file;
+			aux_docs->prox->prox = NULL;
+
+
+			aux = (Ocorrencia*) malloc(sizeof(Ocorrencia));
+			aux->indice = indice;
+			aux->prox = NULL;
+
+			aux_docs->prox->last_ocorrencia = aux;
+			aux_docs->prox->n_ocorrencia = aux;
+		}
+	}
+}
+
+bool insere_word(Arq_invertido** No,char* word, int number_file, int indice_ocorrencia){
 
 	if(*No==NULL){
 		(*No) = (Arq_invertido*)malloc(sizeof(Arq_invertido));
-		(*No)->docs = (bool*) calloc (total_file,sizeof(bool));
+		insere_Ocorrencia(&((*No)->ocorrencia),number_file,indice_ocorrencia);
 
 		(*No)->word = word;
-		(*No)->docs[number_file]=true;
 		(*No)->prox = NULL;
 		(*No)->prev = NULL;
 	}else{
@@ -135,9 +190,8 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 				cmp = strcmp(word,aux->word);
 				if(cmp<0){
 					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
-					novo_no->docs = (bool*) calloc (total_file,sizeof(bool));
+					insere_Ocorrencia(&((novo_no)->ocorrencia),number_file,indice_ocorrencia);
 					novo_no->word = word;
-					novo_no->docs[number_file]=true;
 
 					novo_no->prox = aux;
 					novo_no->prev = aux->prev;
@@ -149,16 +203,15 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 
 					break;
 				}else if(cmp==0){
-					aux->docs[number_file]=true;
+					insere_Ocorrencia(&((aux)->ocorrencia),number_file,indice_ocorrencia);
 					break;
 				}
 			}else{
 				cmp = strcmp(word,aux->word);
 				if(cmp<0){
 					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
-					novo_no->docs = (bool*) calloc (total_file,sizeof(bool));
+					insere_Ocorrencia(&((novo_no)->ocorrencia),number_file,indice_ocorrencia);
 					novo_no->word = word;
-					novo_no->docs[number_file]=true;
 
 					novo_no->prox = aux;
 					novo_no->prev = aux->prev;
@@ -169,13 +222,12 @@ bool insere_word(Arq_invertido** No,char* word, int number_file, int total_file)
 						(*No) = novo_no;
 					break;
 				}else if(cmp==0){
-					aux->docs[number_file]=true;
+					insere_Ocorrencia(&((aux)->ocorrencia),number_file,indice_ocorrencia);
 					break;
 				}else{
 					novo_no = (Arq_invertido*)malloc(sizeof(Arq_invertido));
-					novo_no->docs = (bool*) calloc (total_file,sizeof(bool));
+					insere_Ocorrencia(&((novo_no)->ocorrencia),number_file,indice_ocorrencia);
 					novo_no->word = word;
-					novo_no->docs[number_file]=true;
 					novo_no->prox = NULL;
 					novo_no->prev = aux;
 
@@ -199,8 +251,8 @@ ui hash_str(char* str){
 	return h;
 }
 
-bool insere_hash(char* word, int number_file, int total_file){
-	return insere_word(&Hash[hash_str(word)],word,number_file,total_file);
+bool insere_hash(char* word, int number_file, int indice_ocorrencia){
+	return insere_word(&Hash[hash_str(word)],word,number_file,indice_ocorrencia);
 }
 
 
@@ -212,6 +264,7 @@ bool initialize_file(char* file_name, int number_file, int total_file){
 		char lc_c;
 		char* ls_str;
 		long int li_file_size;
+		int li_indice_ocorrencia = 1;
 
 		fseek(lf_file, 0L, SEEK_END);//deslocar o curso para o fim para poder pegar seu tamanho maximo
 		li_file_size = ftell(lf_file);//pegar o tamanho do arquivo
@@ -230,11 +283,13 @@ bool initialize_file(char* file_name, int number_file, int total_file){
 
 			if(ls_str!=NULL){
 				if(!is_letter(lc_c)){
-					insere_hash(ls_str, number_file-1,total_file);
+					insere_hash(ls_str, number_file-1,li_indice_ocorrencia);
+					li_indice_ocorrencia++;
 				}else{//Necessário devido ao final de texto(código exclui a ultima letra por causa do while)
 					lc_c = lower(lc_c);
 					ls_str = append(ls_str,lc_c);
-					insere_hash(ls_str,number_file-1,total_file);
+					insere_hash(ls_str,number_file-1,li_indice_ocorrencia);
+					li_indice_ocorrencia++;
 				}//End else
 			}//End if
 
@@ -247,7 +302,7 @@ bool initialize_file(char* file_name, int number_file, int total_file){
 return true;
 }//End initialize_file()
 
-bool* search_list(Arq_invertido* list,char* word){
+Docs* search_list(Arq_invertido* list,char* word){
 	ui cmp;
 	while(true){
 		if(list==NULL)
@@ -255,7 +310,7 @@ bool* search_list(Arq_invertido* list,char* word){
 		cmp = strcmp(word,list->word);
 
 		if(cmp==0)
-			return list->docs;
+			return list->ocorrencia;//list->docs;
 		else if(cmp<0)
 			break;
 
@@ -271,6 +326,40 @@ bool* ocurrence_word(char* a_str,int number_word,int argc){
 	}
 	return true;
 }*/
+
+
+Docs* compare_No(Docs* No1 , Docs* No2){// volta a interseção dos Docs*
+	Docs* result = NULL;
+	Ocorrencia* oc1 = NULL;
+	Ocorrencia* oc2 = NULL;
+	int cmp;
+	while(No1!=NULL && No2!=NULL){
+		cmp = No1->file - No2->file;
+		if(cmp==0){
+			oc1 = No1->n_ocorrencia;
+			oc2 = No2->n_ocorrencia;
+			while(oc1!=NULL && oc2!=NULL){
+				if(oc1->indice +1 == oc2->indice){
+					insere_Ocorrencia(&(result),No1->file,oc2->indice);
+					oc1 = oc1->prox;
+					oc2 = oc2->prox;
+				}else if(oc1->indice < oc2->indice){
+					oc1 = oc1->prox;
+				}else{
+					oc2 = oc2->prox;
+				}
+			}
+			No1 = No1->prox;
+			No2 = No2->prox;
+		}else if(cmp<0)
+			No1 = No1->prox;
+		else
+			No2 = No2->prox;
+
+	}
+
+	return result;
+}
 
 // END Functions --------------------------------------------------------------
 
@@ -289,16 +378,18 @@ memset(Hash,0x0,MAX_HASH);
 char ls_str[BUFFER_SIZE];
 ui length;
 int end_text,begin_word;
-bool* ocorrencia;
-bool* aux=NULL;
+Docs* ocorrencia;
+Docs* aux;
 bool flag;
 String* word;
 
 word = (String*)malloc(sizeof(String));
 	while(fgets(ls_str,BUFFER_SIZE,stdin)!=NULL){
-		ocorrencia = (bool*)calloc((argc-1),sizeof(bool));
+		ocorrencia = NULL;//(bool*)calloc((argc-1),sizeof(bool));
+		aux = NULL;
 		end_text=0;
-		flag=true;
+		flag=false;
+
 
 		while(ls_str[end_text]!='\n'){
 
@@ -314,21 +405,18 @@ word = (String*)malloc(sizeof(String));
 
 			aux = search_list(Hash[hash_str(word->string)],word->string);
 			if(aux!=NULL){
-				if(!flag)
-					for(i=0;i<argc-1;i++)
-						ocorrencia[i] = aux[i] && ocorrencia[i];
-				else{
-					for(i=0;i<argc-1;i++)
-						ocorrencia[i] = aux[i];
-					flag = false;
+				if(flag){
+					ocorrencia = compare_No(ocorrencia,aux);
+				}else{//Primeira ocorrencia
+					ocorrencia = aux;
+					flag = true;
+
 				}
 
 			}else{
-				for(i=0;i<argc-1;i++)
-					ocorrencia[i] = false;
+				ocorrencia = NULL;
 				break;
 			}
-
 
 			if(ls_str[end_text]=='\n')
 				break;
@@ -336,13 +424,21 @@ word = (String*)malloc(sizeof(String));
 			free(word->string);
 			end_text++;
 		}
-		flag=false;
+		/*flag=false;
 		for(i=0;i<argc-1;i++)
 			if(ocorrencia[i]){
 				flag = true;
 				printf("%s ",argv[i+1]);
 			}
 		if(!flag)
+			printf("FRASE NAO ENCONTRADA!");
+		*/
+		if(ocorrencia!=NULL){
+			while(ocorrencia!=NULL){
+				printf("%s ",argv[ocorrencia->file + 1]);
+				ocorrencia = ocorrencia->prox;
+			}
+		}else
 			printf("FRASE NAO ENCONTRADA!");
 
 		printf("\n");
