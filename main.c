@@ -253,7 +253,56 @@ bool insere_hash(char* word, int number_file, int indice_ocorrencia){
 	return insere_word(&Hash[hash_str(word)],word,number_file,indice_ocorrencia);
 }
 
+bool initialize_file(char* file_name, int number_file){//Versão 2
+	FILE *lf_file;
+	lf_file = fopen(file_name,"r");
 
+	if(lf_file!=NULL){
+		long int li_file_size;
+		long int li_ponteiro = 0;
+		long int li_begin;
+		long int lenght;
+		int li_indice_ocorrencia = 1;
+
+		char* texto = NULL;
+		char* word = NULL;
+
+		fseek(lf_file, 0L, SEEK_END);//deslocar o curso para o fim para poder pegar seu tamanho maximo
+		li_file_size = ftell(lf_file);//pegar o tamanho do arquivo
+		fseek(lf_file,0,SEEK_SET);//setar o cursor do arquivo para o ��nicio
+
+		texto = (char*)malloc(li_file_size);
+		fread(texto,1,li_file_size,lf_file);
+
+		while(li_ponteiro<li_file_size){
+			li_begin = li_ponteiro;
+			while(is_letter(texto[li_ponteiro])){
+				texto[li_ponteiro] = lower(texto[li_ponteiro]);
+				li_ponteiro++;
+			}
+
+			lenght = li_ponteiro-li_begin;
+
+			if(lenght>0){
+				word = (char*)calloc((li_ponteiro-li_begin),sizeof(char));
+				memmove(word,texto+li_begin,(li_ponteiro-li_begin));
+
+				insere_hash(word, number_file-1,li_indice_ocorrencia);
+				li_indice_ocorrencia++;
+			}
+
+			li_ponteiro++;
+		}
+		free(texto);
+		fclose(lf_file);
+	}else
+		return false;
+
+return true;
+//End initialize_file()
+}
+
+/*
 bool initialize_file(char* file_name, int number_file, int total_file){
 	FILE *lf_file;
 	lf_file = fopen(file_name,"r");
@@ -299,7 +348,7 @@ bool initialize_file(char* file_name, int number_file, int total_file){
 
 return true;
 }//End initialize_file()
-
+*/
 Docs* search_list(Arq_invertido* list,char* word){
 	ui cmp;
 	while(true){
@@ -357,7 +406,7 @@ int i=1;
 
 memset(Hash,0x0,MAX_HASH);
 	while(i<argc){//Reading the input files
-		if(!initialize_file(argv[i],i,argc-1)){
+		if(!initialize_file(argv[i],i)){
 			printf("Error: File %s can't be loaded.", argv[i]);
 			exit(-1);
 		}//End if
