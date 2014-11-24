@@ -464,8 +464,10 @@ word = (String*)malloc(sizeof(String));
 		}
 
 		if(ocorrencia!=NULL){
+			printf("%s",argv[ocorrencia->file + 1]);
+			ocorrencia = ocorrencia->prox;
 			while(ocorrencia!=NULL){
-				printf("%s ",argv[ocorrencia->file + 1]);
+				printf(" %s",argv[ocorrencia->file + 1]);
 				ocorrencia = ocorrencia->prox;
 			}
 
